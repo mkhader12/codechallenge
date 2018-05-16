@@ -163,12 +163,21 @@ public class TicketSvcClient {
     }
 
     private int readIntInput(String s) {
-        String intStr = readInput(s);
-        int intVal = 0;
-        if (intStr !=null) {
-            intVal = Integer.valueOf(intStr).intValue();
+        int retry = 0;
+        while (retry < 3) {
+            String intStr = readInput(s);
+            int intVal = 0;
+            if (intStr != null) {
+                try {
+                    intVal = Integer.valueOf(intStr).intValue();
+                    return intVal;
+                } catch (NumberFormatException e) {
+                    System.out.println("\nInvalid Input\n");
+                    retry++;
+                }
+            }
         }
-        return intVal;
+        return 0;
     }
 
     private void findBestSeat() {

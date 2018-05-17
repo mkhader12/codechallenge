@@ -16,18 +16,13 @@ public class TicketSvcTestHarness {
     private static TicketService ticketService;
     private static Venue venue;
 
-    public void printMenu() {
-        System.out.println("\n----- Ticketing System -----\n");
-        System.out.println("\t'V' - View Seating Chart");
-        System.out.println("\t'N' - Number of seats available");
-        System.out.println("\t'H' - Hold Seat");
-        System.out.println("\t'R' - Reserve Seat");
-        System.out.println("\t'Q' - Quit");
-        System.out.println("--------------------------------\n");
-    }
-
     public static void main(String[] args) {
-        venue=new Venue(10, 10, 180);
+
+        final int numberOfRows = 10;
+        final int numberOfSeatPerRow = 10;
+        final int seatHoldInseconds = 180;
+        venue=new Venue(numberOfRows, numberOfSeatPerRow, seatHoldInseconds);
+
         ticketService =  new TicketServiceImpl(venue);
         performUserFunctions();
     }
@@ -62,6 +57,17 @@ public class TicketSvcTestHarness {
             }
         }
     }
+
+    public void printMenu() {
+        System.out.println("\n----- Ticketing System -----\n");
+        System.out.println("\t'V' - View Seating Chart");
+        System.out.println("\t'N' - Number of seats available");
+        System.out.println("\t'H' - Hold Seat");
+        System.out.println("\t'R' - Reserve Seat");
+        System.out.println("\t'Q' - Quit");
+        System.out.println("--------------------------------\n");
+    }
+
 
     private void reserveSeat() {
         int seatId = 0;
@@ -162,7 +168,7 @@ public class TicketSvcTestHarness {
     }
 
     private void viewSeatMap() {
-        venue.printSeats();
+        venue.printVenueSeatLayout();
     }
 
     private String readInput(String s) {

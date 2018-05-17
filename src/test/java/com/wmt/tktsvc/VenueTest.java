@@ -18,7 +18,7 @@ public class VenueTest {
     public void fillSeats() {
         Venue venue = new Venue(5,10,60);
         assertEquals(50, venue.getNumberOfAvailableSeats());
-        venue.printSeats();
+        venue.printVenueSeatLayout();
     }
 //
 //    @Test
@@ -27,14 +27,14 @@ public class VenueTest {
 //        boolean reserved = venue.reserveFirstAvailableSeats(444, 12);
 //        assertTrue(reserved);
 //        assertEquals(38, venue.getNumberOfAvailableSeats());
-//        venue.printSeats();
+//        venue.printVenueSeatLayout();
 //        System.out.println("\n");
 //        venue.reserveSeats(3,6,445, 5);
-//        venue.printSeats();
+//        venue.printVenueSeatLayout();
 //        System.out.println("\n");
 //        venue.reserveSeats(2,1, 446, 2);
-//        venue.printSeats();
-//        List<SeatBlock> availableBlocks = venue.findAvailableBlocksOfSeats();
+//        venue.printVenueSeatLayout();
+//        List<SeatBlock> availableBlocks = venue.findAvailableBlocksOfSeat();
 //        System.out.println("\n");
 //
 //    }
@@ -45,14 +45,14 @@ public class VenueTest {
 //        boolean reserved = venue.holdFirstAvailableSeats( 12);
 //        assertTrue(reserved);
 //        assertEquals(38, venue.getNumberOfAvailableSeats());
-//        venue.printSeats();
+//        venue.printVenueSeatLayout();
 //        System.out.println("\n");
 //        venue.holdFirstAvailableSeats(6);
-//        venue.printSeats();
+//        venue.printVenueSeatLayout();
 //        System.out.println("\n");
 //        venue.holdSeats(2,1, 2);
-//        venue.printSeats();
-//        List<SeatBlock> availableBlocks = venue.findAvailableBlocksOfSeats();
+//        venue.printVenueSeatLayout();
+//        List<SeatBlock> availableBlocks = venue.findAvailableBlocksOfSeat();
 //        System.out.println("\n");
 //    }
 
@@ -75,14 +75,14 @@ public class VenueTest {
 //        venue.holdSeats(3,4, 5);
 //        venue.holdSeats(4,3, 5);
 //        venue.holdSeats(5,5, 5);
-        venue.printSeats();
+        venue.printVenueSeatLayout();
 
         List<Seat> availableSeats = venue.findBestSeats(6);
         assertNotNull(availableSeats);
-        List<SeatBlock> blockOfSeats = venue.findAvailableBlocksOfSeats();
+        List<SeatBlock> blockOfSeats = venue.findAvailableBlocksOfSeat();
         assertNotNull(blockOfSeats);
         System.out.println();
-        venue.printSeats();
+        venue.printVenueSeatLayout();
 
     }
 

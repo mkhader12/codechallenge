@@ -12,8 +12,14 @@ import java.util.stream.Stream;
 import com.wmt.tktsvc.excep.SeatNotAvailableException;
 
 
+/**
+ * @author mkhader
+ * @implNote Venue class is used as a venue where the seats are held
+ *              and the reservation functions are performed
+ */
 public class Venue {
 
+    private final VenuePrintMap venueMap = new VenuePrintMap(this);
     List<Seat> seats;
     int numberOfRows;
     int numberOfSeatsPerRow;
@@ -21,6 +27,14 @@ public class Venue {
 
     Map<Integer, SeatHold> seatHolds = new ConcurrentHashMap<>();
 
+    /**
+     * The constructor set number of rows and seats per row and
+     *  the number of seconds to hold a seat. This initializes the seat creation
+     *
+     * @param rows
+     * @param seatsPerRow
+     * @param seatHoldInseconds
+     */
     public Venue(int rows, int seatsPerRow, int seatHoldInseconds) {
         this.numberOfRows = rows;
         this.numberOfSeatsPerRow = seatsPerRow;
@@ -28,6 +42,12 @@ public class Venue {
         createSeats(rows, seatsPerRow);
     }
 
+    /**
+     * Creates seat objects into the list of seats
+     *
+     * @param rows
+     * @param seatsPerRow
+     */
     private void createSeats(int rows, int seatsPerRow) {
         Seat currentSeat;
         seats = new ArrayList<>();
@@ -39,50 +59,87 @@ public class Venue {
         }
     }
 
-    public List<SeatBlock> findAvailableBlocksOfSeats() {
-        if (seats != null) {
-            int numberOfSeatsAvailable = 0;
-            Seat rootSeat = null;
+    /**
+     * This methods traverse thru seats in all rows and looks for available seats and returns
+     *  list of available seats either in the same row or various rows.
+     *
+     * @param numberOfSeatsRequested
+     * @return
+     * @throws SeatNotAvailableException
+     */
+    public List<Seat> findBestSeats(int numberOfSeatsRequested) throws SeatNotAvailableException {
+        List<Seat> bestSeatsAvailable =new ArrayList<>();
+        if (getNumberOfAvailableSeats() >= numberOfSeatsRequested) {
+            // Loop until the number of seats found
+            while (numberOfSeatsRequested > 0) {
 
-            List<SeatBlock> seatBlocks = new ArrayList<>();
-            for(int i=1; i <= numberOfRows; i++) {
-                numberOfSeatsAvailable = 0;
-                rootSeat=null;
-                for (int j=1; j <= numberOfSeatsPerRow; j++) {
-                    Seat aSeat = findSeat(i, j);
-                    if (aSeat != null && aSeat.isAvailable()) {
-                        if (rootSeat == null) {
-                            rootSeat = aSeat;
-                        }
-                        numberOfSeatsAvailable++;
+                //
+                // Get the best available block of seat for the number of seats requested.
+                //  The block may have all seats required or else partial seats
+                //
+                SeatBlock seatBlock = getBestBlockOfSeats(numberOfSeatsRequested);
+
+                List<Seat> availableSeats;
+                if (seatBlock != null) {
+                    // Check to see how many seats available in the block
+                    int numberOfSeatsAvailable = seatBlock.getNumberOfSeats();
+                    if (numberOfSeatsAvailable > numberOfSeatsRequested) {
+                        numberOfSeatsAvailable = numberOfSeatsRequested;
                     }
-                    else if (numberOfSeatsAvailable > 0) {
-                        seatBlocks.add(new SeatBlock(rootSeat, numberOfSeatsAvailable));
-                        rootSeat = null;
-                        numberOfSeatsAvailable = 0;
-                    }
-                }
-                if (numberOfSeatsAvailable > 0) {
-                    seatBlocks.add(new SeatBlock(rootSeat, numberOfSeatsAvailable));
+                    //
+                    // Book the number of seats available in the block
+                    availableSeats = holdSeats(seatBlock.getRootSeat(), numberOfSeatsAvailable);
+                    //
+                    // Check to see if more seats are needed
+                    numberOfSeatsRequested = numberOfSeatsRequested - seatBlock.getNumberOfSeats();
+                    //
+                    // Keep collecting the seat objects available in to a master list
+                    bestSeatsAvailable = Stream.concat(bestSeatsAvailable.stream(), availableSeats.stream())
+                            .collect(Collectors.toList());
                 }
             }
-            Collections.sort(seatBlocks, Collections.reverseOrder());
-            return seatBlocks;
 
+            // If there is no enough seats available
+            //   release previously held seats as part of the iteration
+            if (numberOfSeatsRequested > 0) {
+                releaseHold(bestSeatsAvailable);
+            }
+            else {
+                // We got all the seats
+                return bestSeatsAvailable;
+            }
+        }
+        else {
+            throw new SeatNotAvailableException();
         }
         return null;
     }
-    public SeatBlock findAvailableBlocksOfSeats(List<SeatBlock> availableBlocksOfSeats, int numberOfSeatsRequested) {
-        int bestDiff=availableBlocksOfSeats.get(0).getNumberOfSeats();
+
+    /**
+     *
+     * @param numberOfSeatsRequested
+     * @return
+     */
+    public SeatBlock getBestBlockOfSeats(int numberOfSeatsRequested) {
+        List<SeatBlock> availableBlocksOfSeats = findAvailableBlocksOfSeat();
         SeatBlock bestBlock = availableBlocksOfSeats.get(0);
-        // Perfect Fit
+        //
+        // First search for perfect fit
+        //
         for (SeatBlock seatBlock : availableBlocksOfSeats) {
             if (numberOfSeatsRequested - seatBlock.getNumberOfSeats() == 0) {
                 return seatBlock;
             }
         }
-        bestDiff = this.numberOfSeatsPerRow;
-        // Best available fit
+        //
+        // Next look for maximum seats to cover
+        //
+        int bestDiff = this.numberOfSeatsPerRow;
+        //
+        // Best available slots to fit in
+        //  Iterate over the seat blocks and find that can best fit
+        //      the number of seats requested
+        //
         for (SeatBlock seatBlock : availableBlocksOfSeats) {
             int difference = seatBlock.getNumberOfSeats() - numberOfSeatsRequested;
             if (difference < bestDiff) {
@@ -92,11 +149,15 @@ public class Venue {
         }
         if (bestBlock.getNumberOfSeats() >= numberOfSeatsRequested)
         {
+            // The block contains enough seats so return it
             return bestBlock;
         }
-        bestDiff = this.numberOfSeatsPerRow;
 
-        // Best available fit
+        //
+        //  The worst case fit
+        //   Now we are getting in to fragmented search
+        //
+        bestDiff = this.numberOfSeatsPerRow;
         for (SeatBlock seatBlock : availableBlocksOfSeats) {
             int difference = numberOfSeatsRequested - seatBlock.getNumberOfSeats();
             if (difference < bestDiff) {
@@ -108,6 +169,61 @@ public class Venue {
     }
 
 
+    /**
+     * This method returns seats availability in chucks of
+     *  availability Seat block.
+     *  The seat block contains a beginning seat object and
+     *   the number of continuous seats available.
+     *
+     */
+    public List<SeatBlock> findAvailableBlocksOfSeat() {
+        if (seats != null) {
+            List<SeatBlock> seatBlocks = new ArrayList<>();
+
+            // Iterate thru seats
+            //  and if the seats available store beginning seat object
+            //    followed by the number of seats available.
+            for(int i=1; i <= numberOfRows; i++) {
+                int numberOfSeatsAvailable = 0;
+                Seat beginSeat=null;
+                for (int j=1; j <= numberOfSeatsPerRow; j++) {
+                    Seat aSeat = findSeat(i, j);
+                    if (aSeat != null && aSeat.isAvailable()) {
+                        // Seats are available
+                        // Set the beginning seat
+                        //
+                        if (beginSeat == null) {
+                            beginSeat = aSeat;
+                        }
+                        numberOfSeatsAvailable++;
+                    }
+                    else if (numberOfSeatsAvailable > 0) {
+                        //
+                        // When the seats no longer available store the block
+                        //
+                        seatBlocks.add(new SeatBlock(beginSeat, numberOfSeatsAvailable));
+                        beginSeat = null;
+                        numberOfSeatsAvailable = 0;
+                    }
+                }
+                // Keep adding the seat blocks in to a list
+                if (numberOfSeatsAvailable > 0) {
+                    seatBlocks.add(new SeatBlock(beginSeat, numberOfSeatsAvailable));
+                }
+            }
+            // Reverse sort the seat blocks so that maximum available seats will be on top
+            Collections.sort(seatBlocks, Collections.reverseOrder());
+            return seatBlocks;
+
+        }
+        return null;
+    }
+
+
+    /**
+     * This method returns number seats available
+     * @return
+     */
     public int getNumberOfAvailableSeats() {
         int numberOfSeats =0;
         if (seats != null) {
@@ -118,97 +234,13 @@ public class Venue {
         return numberOfSeats;
     }
 
-//    public boolean holdFirstAvailableSeats(int numberOfRequestedSeats)
-//            throws SeatNotAvailableException {
-//        if (getNumberOfAvailableSeats() > numberOfRequestedSeats)
-//        {
-//            Seat seat = seats.get(0);
-//            holdBlockOfSeats(seat, numberOfRequestedSeats);
-//            return true;
-//        }
-//        return false;
-//    }
-
-//    private void holdBlockOfSeats(Seat seat,  int numberOfRequestedSeats)
-//            throws SeatNotAvailableException {
-//        while (seat != null && numberOfRequestedSeats > 0) {
-//            if (seat.isAvailable()) {
-//                seat.holdSeat(this.holdForInSeconds);
-//                numberOfRequestedSeats--;
-//            }
-//            seat = seat.getNextSeat();
-//        }
-//    }
-
-//
-//    public int holdSeats(int row, int column, int numberOfRequestedSeats)
-//            throws SeatNotAvailableException {
-//        int numberOfSeatsHeld=0;
-//
-//        if (getNumberOfAvailableSeats() > numberOfRequestedSeats)
-//        {
-//            for (int j=column; j <=column+numberOfRequestedSeats; j++) {
-//                Seat seat = findSeat(row, j);
-//                if (seat != null && seat.isAvailable()) {
-//                    seat.holdSeat(this.holdForInSeconds);
-//                    numberOfSeatsHeld++;
-//                }
-//            }
-//        }
-//        else
-//        {
-//            throw new SeatNotAvailableException();
-//        }
-//        return numberOfSeatsHeld;
-//    }
-
-
-    public void printSeats() {
-        final String stageWord = " STAGE ";
-        for (int i = 0; i < 3*numberOfSeatsPerRow; i++) {
-            System.out.print('-');
-        }
-        int dashLength = (3*numberOfSeatsPerRow - stageWord.length()) / 2;
-        System.out.println();
-        for (int i = 0; i < dashLength; i++) {
-            System.out.print('-');
-        }
-        System.out.print(stageWord);
-        for (int i = 0; i <= dashLength; i++) {
-            System.out.print('-');
-        }
-        System.out.println();
-        for (int i = 0; i < 3*numberOfSeatsPerRow; i++) {
-            System.out.print('-');
-        }
-        System.out.println();
-
-        for (int row=0; row < numberOfRows; row++) {
-            for (int col=0; col < numberOfSeatsPerRow; col++) {
-                Seat seat = findSeat(row+1, col+1);
-                if (seat != null) {
-                    if (seat.isAvailable()) {
-                        System.out.print(" A ");
-                    }
-                    else if (seat.isHeld())
-                    {
-                        System.out.print(" H ");
-                    }
-                    else if (seat.isReserved()) {
-                        System.out.print(" R ");
-
-                    }
-                }
-
-            }
-            System.out.println();
-        }
-        for (int i = 0; i < 3*numberOfSeatsPerRow; i++) {
-            System.out.print('-');
-        }
-        System.out.println();
-    }
-
+    /**
+     *  Find the seat by row and column
+     *
+     * @param row
+     * @param column
+     * @return
+     */
     public Seat findSeat(int row, int column) {
         if (seats != null) {
             for (Seat seat : seats) {
@@ -221,49 +253,27 @@ public class Venue {
         return null;
     }
 
-    public List<Seat> findBestSeats(int numberOfSeatsRequested) throws SeatNotAvailableException {
-        List<Seat> masterList=new ArrayList<>();
-        if (getNumberOfAvailableSeats() >= numberOfSeatsRequested) {
-            while (numberOfSeatsRequested > 0) {
-                List<SeatBlock> availableSeats = findAvailableBlocksOfSeats();
-                SeatBlock seatBlock = findAvailableBlocksOfSeats(availableSeats, numberOfSeatsRequested);
-                List<Seat> seatList;
-                if (seatBlock != null) {
-                    int requiredNumberOfSeatsInTheRow = seatBlock.getNumberOfSeats();
-                    if (seatBlock.getNumberOfSeats() > numberOfSeatsRequested) {
-                        requiredNumberOfSeatsInTheRow = numberOfSeatsRequested;
-                    }
-                    seatList = bookSeat(seatBlock.getRootSeat(), requiredNumberOfSeatsInTheRow);
-                    numberOfSeatsRequested = numberOfSeatsRequested - seatBlock.getNumberOfSeats();
-                    masterList = Stream.concat(masterList.stream(), seatList.stream())
-                            .collect(Collectors.toList());
-                } else {
+    /**
+     *
+     * @param beginSeat
+     * @param numberOfSeatsRequested
+     * @return
+     * @throws SeatNotAvailableException
+     */
+    private List<Seat> holdSeats(Seat beginSeat, int numberOfSeatsRequested) throws SeatNotAvailableException {
+        List<Seat> heldSeatList = new ArrayList<>();
 
-                }
-            }
+        // Add the beginning seat
+        heldSeatList.add(beginSeat);
+        beginSeat.holdSeat(this.holdForInSeconds);
 
-            if (numberOfSeatsRequested > 0) {
-                releaseHold(masterList);
-            } else {
-                return masterList;
-            }
-        }
-        else {
-            throw new SeatNotAvailableException();
-        }
-        return null;
-    }
-
-    private List<Seat> bookSeat(Seat rootSeat, int numberOfSeatsRequested) throws SeatNotAvailableException {
-        List<Seat> returnList = new ArrayList<>();
-        returnList.add(rootSeat);
-        rootSeat.holdSeat(this.holdForInSeconds);
-        for (int j=rootSeat.getSeatNo()+1; j<rootSeat.getSeatNo()+numberOfSeatsRequested; j++) {
-            Seat seat = findSeat(rootSeat.getRowNo(), j);
+        // Hold all the other seats for the number of seats
+        for (int j=beginSeat.getSeatNo()+1; j<beginSeat.getSeatNo()+numberOfSeatsRequested; j++) {
+            Seat seat = findSeat(beginSeat.getRowNo(), j);
             seat.holdSeat(this.holdForInSeconds);
-            returnList.add(seat);
+            heldSeatList.add(seat);
         }
-        return returnList;
+        return heldSeatList;
     }
 
     private void releaseHold(List<Seat> newList) {
@@ -276,4 +286,20 @@ public class Venue {
         seats.forEach(seat -> seat.release());
     }
 
+
+    /**
+     *  Print Venue Layout Method and helper methods
+     */
+    public void printVenueSeatLayout() {
+        venueMap.printVenueSeatLayout();
+    }
+
+
+    public int getNumberOfSeatsPerRow() {
+        return numberOfSeatsPerRow;
+    }
+
+    public int getNumberOfRows() {
+        return numberOfRows;
+    }
 }

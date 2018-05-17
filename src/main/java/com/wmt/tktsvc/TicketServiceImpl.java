@@ -3,8 +3,9 @@ package com.wmt.tktsvc;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.wmt.tktsvc.excep.SeatNotAvailableException;
 
 
 public class TicketServiceImpl implements TicketService {
@@ -20,14 +21,12 @@ public class TicketServiceImpl implements TicketService {
     }
 
     public SeatHold findAndHoldSeats(int numSeats, String customerEmail) {
-
-
         SeatHold existingHold = customerMap.get(customerEmail);
         if (existingHold == null) {
             // Check whethere numSeats is less than available number of seats
             List<Seat> seats = null;
             try {
-                seats = venue.findBestSeats(numSeats);
+            seats = venue.findBestSeats(numSeats);
             } catch (SeatNotAvailableException e) {
                 return null;
             }
@@ -38,13 +37,13 @@ public class TicketServiceImpl implements TicketService {
                 else
                 {
                     SeatHold seatHold = new SeatHold(customerEmail, seats);
-
                     int seatHeldId = IdGenerator.generate(customerEmail);
                     seatHold.setSeatHoldId(seatHeldId);
                     customerMap.put(customerEmail, seatHold);
                     return seatHold;
                 }
             }
+
         }
         else
         {
@@ -56,11 +55,13 @@ public class TicketServiceImpl implements TicketService {
 
     public String reserveSeats(int seatHoldId, String customerEmail) {
         SeatHold seatHold = customerMap.get(customerEmail);
-        if (seatHold != null && seatHold.isSeatsHeldByUser(customerEmail)) {
+        if (seatHold != null &&
+                seatHold.isSeatsHeldByUser(customerEmail) &&
+                seatHold.getSeatHoldId() == seatHoldId) {
             try {
                 seatHold.reserveSeats();
-                customerMap.remove(seatHold);
-                return generateConfId();
+                customerMap.remove(customerEmail);
+                return generateConfId(seatHoldId);
             } catch (SeatNotAvailableException e) {
                 e.printStackTrace();
             }
@@ -68,8 +69,7 @@ public class TicketServiceImpl implements TicketService {
         return null;
     }
 
-    private String generateConfId() {
-        UUID id = UUID.randomUUID();
-        return id.toString();
+    private String generateConfId(int seatHoldId) {
+        return "R-"+ seatHoldId;
     }
 }

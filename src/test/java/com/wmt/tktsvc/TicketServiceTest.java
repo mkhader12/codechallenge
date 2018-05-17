@@ -13,7 +13,7 @@ public class TicketServiceTest {
 
     @Test
     public void findNumberOfSeats() {
-        Venue aNewVenue= new Venue(NUM_OF_ROWS, NUM_OF_SEATS_PER_ROW);
+        Venue aNewVenue= new Venue(NUM_OF_ROWS, NUM_OF_SEATS_PER_ROW,60);
         TicketService ticketService = new TicketServiceImpl(aNewVenue);
         assertEquals(NUM_OF_ROWS*NUM_OF_SEATS_PER_ROW, ticketService.numSeatsAvailable());
     }

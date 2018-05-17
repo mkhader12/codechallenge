@@ -4,6 +4,8 @@ package com.wmt.tktsvc;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.wmt.tktsvc.excep.SeatNotAvailableException;
+
 
 public class SeatHold {
 
@@ -17,15 +19,6 @@ public class SeatHold {
         this.seats.forEach(seat -> {
             seat.setHeldBy(inCustomerEmail);
         });
-    }
-
-
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
-    }
-
-    public void setSeatsHeld(List<Seat> seatsHeld) {
-        this.seats = seatsHeld;
     }
 
     public void setSeatHoldId(int seatHoldId) {
@@ -42,33 +35,18 @@ public class SeatHold {
 
     public boolean isSeatsHeldByUser(String customerEmail) {
         if (seats != null) {
-            long seatsAvailable =  (seats.stream().filter(seat -> seat.isHeld(customerEmail)).count());
-            if (seatsAvailable > 0)
-                return true;
+            return (seats.stream()
+                    .filter(seat -> seat.isHeld(customerEmail))
+                    .count() > 0);
         }
         return false;
     }
 
     public void reserveSeats() throws SeatNotAvailableException {
-        AtomicBoolean returnValue = new AtomicBoolean(false);
         if (seats != null) {
             for (Seat seat : seats) {
                 seat.reserveSeat(this.seatHoldId, customerEmail);
             }
-        }
-    }
-
-    public List<Seat> getSeats() {
-        return seats;
-    }
-
-    public void addSeats(List<Seat> inSeats) {
-        if (seats == null) {
-            seats = inSeats;
-        }
-        else
-        {
-            seats.addAll(inSeats);
         }
     }
 }

@@ -9,53 +9,34 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.wmt.tktsvc.excep.SeatNotAvailableException;
+
 
 public class Venue {
 
     List<Seat> seats;
     int numberOfRows;
     int numberOfSeatsPerRow;
-    int holdForInSeconds=60; // Default Hold for 1 minute
+    int holdForInSeconds=300; // Default Hold for 5 minutes
 
     Map<Integer, SeatHold> seatHolds = new ConcurrentHashMap<>();
 
-    public Venue(int rows, int seatsPerRow) {
+    public Venue(int rows, int seatsPerRow, int seatHoldInseconds) {
         this.numberOfRows = rows;
         this.numberOfSeatsPerRow = seatsPerRow;
+        this.holdForInSeconds = seatHoldInseconds;
         createSeats(rows, seatsPerRow);
     }
 
     private void createSeats(int rows, int seatsPerRow) {
-        Seat prevSeat=null;
         Seat currentSeat;
         seats = new ArrayList<>();
         for(int i=0; i < rows; i++) {
-            if (i % 2 == 0) {
-                for (int j = 0; j < seatsPerRow; j++) {
-                    currentSeat = createSeat(prevSeat, i, j);
-                    prevSeat = currentSeat;
-                }
+            for (int j = 0; j < seatsPerRow; j++) {
+                currentSeat = new Seat(i + 1, j + 1);
+                seats.add(currentSeat);
             }
-            else
-            {
-                for (int j = seatsPerRow-1; j >= 0; j--) {
-                    currentSeat = createSeat(prevSeat, i, j);
-                    prevSeat = currentSeat;
-                }
-            }
-
         }
-    }
-
-    private Seat createSeat(Seat prevSeat, int row, int column) {
-        Seat currentSeat;
-        currentSeat = new Seat(row + 1, column + 1);
-        seats.add(currentSeat);
-        currentSeat.setPreviousSeat(prevSeat);
-        if (prevSeat != null) {
-            prevSeat.setNextSeat(currentSeat);
-        }
-        return currentSeat;
     }
 
     public List<SeatBlock> findAvailableBlocksOfSeats() {
@@ -92,10 +73,9 @@ public class Venue {
         return null;
     }
     public SeatBlock findAvailableBlocksOfSeats(List<SeatBlock> availableBlocksOfSeats, int numberOfSeatsRequested) {
-        int numberOfSeatsAvailable = 0;
         int bestDiff=availableBlocksOfSeats.get(0).getNumberOfSeats();
         SeatBlock bestBlock = availableBlocksOfSeats.get(0);
-        // First available Perfect Fit
+        // Perfect Fit
         for (SeatBlock seatBlock : availableBlocksOfSeats) {
             if (numberOfSeatsRequested - seatBlock.getNumberOfSeats() == 0) {
                 return seatBlock;
@@ -138,49 +118,49 @@ public class Venue {
         return numberOfSeats;
     }
 
-    public boolean holdFirstAvailableSeats(int numberOfRequestedSeats)
-            throws SeatNotAvailableException {
-        if (getNumberOfAvailableSeats() > numberOfRequestedSeats)
-        {
-            Seat seat = seats.get(0);
-            holdBlockOfSeats(seat, numberOfRequestedSeats);
-            return true;
-        }
-        return false;
-    }
+//    public boolean holdFirstAvailableSeats(int numberOfRequestedSeats)
+//            throws SeatNotAvailableException {
+//        if (getNumberOfAvailableSeats() > numberOfRequestedSeats)
+//        {
+//            Seat seat = seats.get(0);
+//            holdBlockOfSeats(seat, numberOfRequestedSeats);
+//            return true;
+//        }
+//        return false;
+//    }
 
-    private void holdBlockOfSeats(Seat seat,  int numberOfRequestedSeats)
-            throws SeatNotAvailableException {
-        while (seat != null && numberOfRequestedSeats > 0) {
-            if (seat.isAvailable()) {
-                seat.holdSeat(this.holdForInSeconds);
-                numberOfRequestedSeats--;
-            }
-            seat = seat.getNextSeat();
-        }
-    }
+//    private void holdBlockOfSeats(Seat seat,  int numberOfRequestedSeats)
+//            throws SeatNotAvailableException {
+//        while (seat != null && numberOfRequestedSeats > 0) {
+//            if (seat.isAvailable()) {
+//                seat.holdSeat(this.holdForInSeconds);
+//                numberOfRequestedSeats--;
+//            }
+//            seat = seat.getNextSeat();
+//        }
+//    }
 
-
-    public int holdSeats(int row, int column, int numberOfRequestedSeats)
-            throws SeatNotAvailableException {
-        int numberOfSeatsHeld=0;
-
-        if (getNumberOfAvailableSeats() > numberOfRequestedSeats)
-        {
-            for (int j=column; j <=column+numberOfRequestedSeats; j++) {
-                Seat seat = findSeat(row, j);
-                if (seat != null && seat.isAvailable()) {
-                    seat.holdSeat(this.holdForInSeconds);
-                    numberOfSeatsHeld++;
-                }
-            }
-        }
-        else
-        {
-            throw new SeatNotAvailableException();
-        }
-        return numberOfSeatsHeld;
-    }
+//
+//    public int holdSeats(int row, int column, int numberOfRequestedSeats)
+//            throws SeatNotAvailableException {
+//        int numberOfSeatsHeld=0;
+//
+//        if (getNumberOfAvailableSeats() > numberOfRequestedSeats)
+//        {
+//            for (int j=column; j <=column+numberOfRequestedSeats; j++) {
+//                Seat seat = findSeat(row, j);
+//                if (seat != null && seat.isAvailable()) {
+//                    seat.holdSeat(this.holdForInSeconds);
+//                    numberOfSeatsHeld++;
+//                }
+//            }
+//        }
+//        else
+//        {
+//            throw new SeatNotAvailableException();
+//        }
+//        return numberOfSeatsHeld;
+//    }
 
 
     public void printSeats() {
@@ -214,7 +194,7 @@ public class Venue {
                     {
                         System.out.print(" H ");
                     }
-                    else if (seat.isBooked()) {
+                    else if (seat.isReserved()) {
                         System.out.print(" R ");
 
                     }

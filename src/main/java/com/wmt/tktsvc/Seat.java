@@ -2,6 +2,9 @@ package com.wmt.tktsvc;
 
 import java.time.Instant;
 
+import com.wmt.tktsvc.excep.SeatNotAvailableException;
+
+
 public class Seat {
     private int rowNo;
     private int seatNo;
@@ -54,14 +57,6 @@ public class Seat {
         return holdUntil;
     }
 
-    public void setPreviousSeat(Seat previousSeat) {
-        this.previousSeat = previousSeat;
-    }
-
-    public void setNextSeat(Seat nextSeat) {
-        this.nextSeat = nextSeat;
-    }
-
     public Seat getNextSeat() {
         return nextSeat;
     }
@@ -70,7 +65,7 @@ public class Seat {
         return (this.holdUntil != null &&  this.holdUntil.isAfter(Instant.now()));
     }
 
-    public boolean isBooked() {
+    public boolean isReserved() {
         return (seatHoldId > 0);
     }
 

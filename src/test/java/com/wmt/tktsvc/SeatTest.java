@@ -3,6 +3,7 @@ package com.wmt.tktsvc;
 
 import java.time.Instant;
 
+import com.wmt.tktsvc.excep.SeatNotAvailableException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +21,7 @@ public class SeatTest {
         seat.holdSeat(600);
         assertNotNull(seat.getHoldUntil());
         assertTrue(seat.getHoldUntil().isAfter(Instant.now()));
-        assertTrue(seat.isAvailable());
+        assertFalse(seat.isAvailable());
     }
 //
 //    @Test

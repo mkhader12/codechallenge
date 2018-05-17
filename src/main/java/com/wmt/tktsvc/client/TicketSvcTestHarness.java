@@ -1,13 +1,18 @@
-package com.wmt.tktsvc;
-
+package com.wmt.tktsvc.client;
 
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.wmt.tktsvc.Seat;
+import com.wmt.tktsvc.SeatHold;
+import com.wmt.tktsvc.TicketService;
+import com.wmt.tktsvc.TicketServiceImpl;
+import com.wmt.tktsvc.Venue;
 
-public class TicketSvcClient {
+
+public class TicketSvcTestHarness {
     private static TicketService ticketService;
     private static Venue venue;
 
@@ -17,18 +22,18 @@ public class TicketSvcClient {
         System.out.println("\t'N' - Number of seats available");
         System.out.println("\t'H' - Hold Seat");
         System.out.println("\t'R' - Reserve Seat");
-        //System.out.println("\t'F' - Find Best Seat");
-        //System.out.println("\t'C' - Choose Seat");
         System.out.println("\t'Q' - Quit");
         System.out.println("--------------------------------\n");
-
-
     }
 
     public static void main(String[] args) {
-        TicketSvcClient svcClient = new TicketSvcClient();
-        venue=new Venue(10, 10);
+        venue=new Venue(10, 10, 180);
         ticketService =  new TicketServiceImpl(venue);
+        performUserFunctions();
+    }
+
+    private static void performUserFunctions() {
+        TicketSvcTestHarness svcClient = new TicketSvcTestHarness();
 
         String userSelection = "";
 
@@ -47,12 +52,6 @@ public class TicketSvcClient {
                     break;
                 case "R":
                     svcClient.reserveSeat();
-                    break;
-                case "F":
-                    svcClient.findBestSeat();
-                    break;
-                case "C":
-                    svcClient.chooseSeat();
                     break;
                 case "Q":
                     svcClient.showGoodByeMsg();
@@ -97,8 +96,7 @@ public class TicketSvcClient {
                     seatsHeld.forEach(seat -> {
                         System.out.print(seat.getSeatId()+"\t");
                     });
-                    System.out.println("\n----------\n");
-                    System.out.println("Your Seat Hold Id is "+ seatHold.getSeatHoldId());
+                    System.out.println("\n----------\nYour Seat Hold Id is "+ seatHold.getSeatHoldId());
                 }
             }
         }
@@ -144,23 +142,6 @@ public class TicketSvcClient {
 
     }
 
-    private void chooseSeat() {
-        viewSeatMap();
-
-        int row = readIntInput("Choose the row number:");
-        int seatNo = readIntInput("Choose the seat number:");
-        int numSeats = readIntInput("Enter number of seats :");
-
-        try {
-            int numSeatsHeld = venue.holdSeats(row, seatNo, numSeats);
-            System.out.println("*** Seats will be held successfully ***");
-
-        } catch (SeatNotAvailableException e) {
-            System.out.println("*** Seat Not available ***");
-        }
-
-
-    }
 
     private int readIntInput(String s) {
         int retry = 0;
@@ -178,21 +159,6 @@ public class TicketSvcClient {
             }
         }
         return 0;
-    }
-
-    private void findBestSeat() {
-        int numSeats = readIntInput("Enter number of seats :");
-
-        try {
-            List<Seat> seats = venue.findBestSeats(numSeats);
-            if (seats != null) {
-                System.out.println(seats.size() +" seats held successfully");
-            }
-            viewSeatMap();
-
-        } catch (SeatNotAvailableException e) {
-            System.out.println("*** Seat Not available ***");
-        }
     }
 
     private void viewSeatMap() {

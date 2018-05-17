@@ -18,8 +18,8 @@ public class TicketSvcTestHarness {
 
     public static void main(String[] args) {
 
-        final int numberOfRows = 15;
-        final int numberOfSeatPerRow = 4;
+        final int numberOfRows = 10;
+        final int numberOfSeatPerRow = 10;
         final int seatHoldInseconds = 180;
         venue=new Venue(numberOfRows, numberOfSeatPerRow, seatHoldInseconds);
 

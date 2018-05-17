@@ -19,6 +19,7 @@ This ticketing service implementation facilates the discovery of available seats
 
 
 git clone https://github.com/mkhader12/codechallenge.git
+
 cd TicketService
 
 mvn clean install

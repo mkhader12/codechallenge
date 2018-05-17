@@ -49,4 +49,8 @@ public class SeatHold {
             }
         }
     }
+
+    public List<Seat> getSeats() {
+        return seats;
+    }
 }

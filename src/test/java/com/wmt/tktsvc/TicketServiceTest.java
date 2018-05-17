@@ -3,12 +3,12 @@ package com.wmt.tktsvc;
 
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static junit.framework.TestCase.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class TicketServiceTest {
@@ -19,7 +19,7 @@ public class TicketServiceTest {
     private TicketService ticketService;
     private Venue aNewVenue;
 
-    @BeforeEach
+    @Before
     public void setup() {
         aNewVenue= new Venue(NUM_OF_ROWS, NUM_OF_SEATS_PER_ROW,60);
         ticketService = new TicketServiceImpl(aNewVenue);

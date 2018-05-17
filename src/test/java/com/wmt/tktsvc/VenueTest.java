@@ -4,12 +4,10 @@ package com.wmt.tktsvc;
 import java.util.List;
 
 import com.wmt.tktsvc.excep.SeatNotAvailableException;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class VenueTest {
@@ -21,7 +19,7 @@ public class VenueTest {
     }
 
     @Test
-    void findBestSeatInTheRowWhenSeatsAvailable() throws SeatNotAvailableException {
+    public void findBestSeatInTheRowWhenSeatsAvailable() throws SeatNotAvailableException {
         Venue venue = new Venue(5,10,60);
         List<Seat> availableSeats = venue.findBestSeats(6);
         assertNotNull(availableSeats);
@@ -30,7 +28,7 @@ public class VenueTest {
     }
 
     @Test
-    void findBestSeatInTheRowWhenSeatsNotAvailable() throws SeatNotAvailableException {
+    public void findBestSeatInTheRowWhenSeatsNotAvailable() throws SeatNotAvailableException {
         Venue venue = new Venue(5,10,60);
         venue.findBestSeats(25);
         List<Seat> availableSeats = venue.findBestSeats(6);

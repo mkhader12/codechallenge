@@ -7,8 +7,8 @@ public class SeatBlock implements Comparable<SeatBlock> {
         this.numberOfSeats = numberOfSeats;
     }
 
-    private Seat rootSeat;
-    private int numberOfSeats;
+    transient private Seat rootSeat;
+    transient private int numberOfSeats;
 
 
     @Override

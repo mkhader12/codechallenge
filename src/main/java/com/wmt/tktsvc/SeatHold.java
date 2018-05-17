@@ -2,16 +2,15 @@ package com.wmt.tktsvc;
 
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.wmt.tktsvc.excep.SeatNotAvailableException;
 
 
 public class SeatHold {
 
-    private int seatHoldId;
-    private List<Seat> seats;
-    private String customerEmail;
+    transient private int seatHoldId;
+    transient private List<Seat> seats;
+    transient private String customerEmail;
 
     public SeatHold(String inCustomerEmail, List<Seat> inSeats) {
         this.customerEmail = inCustomerEmail;

@@ -9,8 +9,8 @@ import com.wmt.tktsvc.excep.SeatNotAvailableException;
 
 
 public class TicketServiceImpl implements TicketService {
-    private Venue venue;
-    Map<String, SeatHold> customerMap = new ConcurrentHashMap<>();
+    transient private Venue venue;
+    transient private Map<String, SeatHold> customerMap = new ConcurrentHashMap<>();
 
     public TicketServiceImpl(Venue newVenue) {
         venue = newVenue;
@@ -30,7 +30,7 @@ public class TicketServiceImpl implements TicketService {
             } catch (SeatNotAvailableException e) {
                 return null;
             }
-            if (seats != null && seats.size() > 0) {
+            if (seats != null && !seats.isEmpty()) {
                 if (seats.size() != numSeats) {
                     venue.releaseSeats(seats);
                 }

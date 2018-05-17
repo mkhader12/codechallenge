@@ -19,11 +19,11 @@ import com.wmt.tktsvc.excep.SeatNotAvailableException;
  */
 public class Venue {
 
-    private final VenuePrintMap venueMap = new VenuePrintMap(this);
-    List<Seat> seats;
-    int numberOfRows;
-    int numberOfSeatsPerRow;
-    int holdForInSeconds=300; // Default Hold for 5 minutes
+    transient private final VenuePrintMap venueMap = new VenuePrintMap(this);
+    transient private List<Seat> seats;
+    transient private int numberOfRows;
+    transient private int numberOfSeatsPerRow;
+    transient private int holdForInSeconds=300; // Default Hold for 5 minutes
 
     Map<Integer, SeatHold> seatHolds = new ConcurrentHashMap<>();
 

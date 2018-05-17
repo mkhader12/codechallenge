@@ -6,13 +6,11 @@ import com.wmt.tktsvc.excep.SeatNotAvailableException;
 
 
 public class Seat {
-    private int rowNo;
-    private int seatNo;
-    private int seatHoldId;
-    private Instant holdUntil;
-    private Seat nextSeat;
-    private Seat previousSeat;
-    private String heldBy;
+    transient private int rowNo;
+    transient private int seatNo;
+    transient private int seatHoldId;
+    transient private Instant holdUntil;
+    transient private String heldBy;
 
     public Seat(int rowNumber, int seatNumber) {
         this.rowNo = rowNumber;
@@ -55,10 +53,6 @@ public class Seat {
 
     public Instant getHoldUntil() {
         return holdUntil;
-    }
-
-    public Seat getNextSeat() {
-        return nextSeat;
     }
 
     public boolean isHeld() {

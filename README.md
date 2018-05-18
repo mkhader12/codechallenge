@@ -24,6 +24,11 @@ cd TicketService
 
 mvn clean install
 
+To execute use the following command.
+
+java -jar target/tktsvc-1.0-SNAPSHOT-jar-with-dependencies.jar
+
+
 **Interactive Standalone Testing Program**
 
 A Test Harness : com.wmt.tktsvc.client.TicketSvcTestHarness
